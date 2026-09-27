@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday Galaxy - Customizer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #010003;
+      color: #fff;
+    }
+
+    /* MÀN HÌNH BẮT ĐẦU */
+    #landing-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999;
+      background: radial-gradient(circle at center, #1a0022 0%, #010003 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    #landing-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .card {
+      background: rgba(25, 0, 30, 0.65);
+      border: 1px solid rgba(255, 0, 102, 0.5);
+      backdrop-filter: blur(15px);
+      padding: 40px 30px;
+      border-radius: 24px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(230, 0, 90, 0.4);
+      max-width: 340px;
+      width: 85%;
+    }
+    .card h1 {
+      font-size: 1.7rem;
+      margin-bottom: 10px;
+      color: #fff;
+      text-shadow: 0 0 15px #ff0066;
+    }
+    .card p {
+      font-size: 0.9rem;
+      color: #ddd;
+      margin-bottom: 25px;
+    }
+    .btn-enter {
+      background: linear-gradient(90deg, #ff0066, #9900aa);
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(255, 0, 102, 0.7);
+      transition: transform 0.2s;
+    }
+    .btn-enter:hover {
+      transform: scale(1.06);
+    }
+
+    /* BẢNG ĐIỀU KHIỂN TÙY CHỈNH (CONTROL PANEL) */
+    #control-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      background: rgba(20, 0, 25, 0.75);
+      border: 1px solid rgba(255, 0, 102, 0.4);
+      backdrop-filter: blur(12px);
+      padding: 15px 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(255, 0, 102, 0.25);
+      width: 240px;
+    }
+    .control-group {
+      margin-bottom: 12px;
+    }
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+    .control-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: #ff88cc;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .control-group input[type="color"] {
+      width: 100%;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: #ff0066;
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* MODAL POPUP LỜI CHÚC */
+    #wish-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    #wish-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .wish-card {
+      background: rgba(30, 5, 38, 0.95);
+      border: 2px solid #ff0066;
+      padding: 30px 25px;
+      border-radius: 24px;
+      text-align: center;
+      max-width: 360px;
+      width: 85%;
+      box-shadow: 0 0 50px rgba(255, 0, 102, 0.6);
+      position: relative;
+      transform: scale(0.8);
+      transition: transform 0.4s ease;
+    }
+    #wish-modal.active .wish-card {
+      transform: scale(1);
+    }
+    .wish-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #ff3399;
+      box-shadow: 0 0 25px #ff0066;
+      object-fit: cover;
+      margin-bottom: 15px;
+    }
+    .wish-title {
+      color: #ff3399;
+      font-size: 1.35rem;
+      margin-bottom: 12px;
+      text-shadow: 0 0 12px #ff0066;
+    }
+    .wish-text {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #f0f0f0;
+      margin-bottom: 22px;
+    }
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 18px;
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+  </style>
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+
+  <!-- MÀN HÌNH BẮT ĐẦU -->
+  <div id="landing-screen">
+    <div class="card">
+      <h1>HAPPY BIRTHDAY</h1>
+      <p>Bấm nút bên dưới để mở quà ❤️</p>
+      <button class="btn-enter" onclick="startExperience()">KHÁM PHÁ VŨ TRỤ ✨</button>
+    </div>
+  </div>
+
+  <!-- BẢNG ĐIỀU KHIỂN MÀU SẮC & TƯƠNG PHẢN -->
+  <div id="control-panel">
+    <div class="control-group">
+      <label>Màu Trái Tim Trung Tâm</label>
+      <input type="color" id="heartColorPicker" value="#ff0066" oninput="updateHeartColor(this.value)">
+    </div>
+    <div class="control-group">
+      <label>Màu Trái Tim Bay Lên</label>
+      <input type="color" id="floatingColorPicker" value="#ff0066" oninput="updateFloatingColor(this.value)">
+    </div>
+    <div class="control-group">
+      <label>Độ Sáng / Tương Phản</label>
+      <input type="range" id="contrastSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="updateContrast(this.value)">
+    </div>
+  </div>
+
+  <!-- MODAL LỜI CHÚC -->
+  <div id="wish-modal">
+    <div class="wish-card">
+      <button class="close-btn" onclick="closeWishModal()">&times;</button>
+      <img id="modal-img" src="" class="wish-img" alt="Avatar">
+      <h2 id="modal-title" class="wish-title">HAPPY BIRTHDAY! ❤️</h2>
+      <p id="modal-text" class="wish-text"></p>
+      <button class="btn-enter" onclick="closeWishModal()">Cảm ơn ❤️</button>
+    </div>
+  </div>
+
+  <!-- NHẠC NỀN -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-happy-birthday-to-you-437.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    const wishesData = [
+      {
+        img: "images/anh1.jpg",
+        title: "Lời Chúc Rực Rỡ ✨",
+        text: "Chúc cậu một tuổi mới thật rực rỡ, luôn giữ nụ cười tươi rạng rỡ và gặt hái thêm nhiều thành công mới!"
+      },
+      {
+        img: "images/anh2.jpg",
+        title: "Ngọt Ngào & Hạnh Phúc 💖",
+        text: "Mong rằng mỗi ngày trong tuổi mới của cậu đều ngập tràn niềm vui, sự ngọt ngào và những ký ức tuyệt vời."
+      },
+      {
+        img: "images/anh3.jpg",
+        title: "Tỏa Sáng Tinh Tú 🌟",
+        text: "Cậu luôn là ngôi sao tỏa sáng nhất. Hãy luôn tự tin, mạnh mẽ bước tiếp và theo đuổi ước mơ của mình nhé!"
+      },
+      {
+        img: "images/anh4.jpg",
+        title: "Tuổi Mới Bình An 🎂",
+        text: "Happy Birthday! Chúc cậu có một ngày sinh nhật thật ấm áp bên người thân yêu, luôn xinh đẹp và may mắn!"
+      }
+    ];
+
+    function startExperience() {
+      document.getElementById('landing-screen').classList.add('hidden');
+      const audio = document.getElementById('bg-music');
+      if (audio) {
+        audio.play().catch(e => console.log("Audio error:", e));
+      }
+    }
+
+    function openWishModal(index) {
+      const data = wishesData[index];
+      document.getElementById('modal-img').src = data.img;
+      document.getElementById('modal-title').innerText = data.title;
+      document.getElementById('modal-text').innerText = data.text;
+      document.getElementById('wish-modal').classList.add('active');
+    }
+
+    function closeWishModal() {
+      document.getElementById('wish-modal').classList.remove('active');
+    }
+
+    // 1. KHỞI TẠO SCENE & CAMERA
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 3.5, 7.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    const mainGroup = new THREE.Group();
+    scene.add(mainGroup);
+
+    // 2. TEXTURE HẠT NEON
+    function createGlowTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.8)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+    const particleTexture = createGlowTexture();
+
+    // 3. TRÁI TIM 3D TRUNG TÂM
+    const heartCount = 15000;
+    const heartGeo = new THREE.BufferGeometry();
+    const heartPos = new Float32Array(heartCount * 3);
+    const heartColors = new Float32Array(heartCount * 3);
+
+    for (let i = 0; i < heartCount; i++) {
+      let x, y, z, inside = false;
+      while (!inside) {
+        x = (Math.random() - 0.5) * 2.6;
+        y = (Math.random() - 0.5) * 2.6;
+        z = (Math.random() - 0.5) * 2.6;
+
+        let a = x * x + (9/4) * y * y + z * z - 1;
+        if (a * a * a - x * x * z * z * z - (9/80) * y * y * z * z * z <= 0) {
+          inside = true;
+        }
+      }
+
+      heartPos[i * 3] = x * 1.15;
+      heartPos[i * 3 + 1] = z * 1.15 + 1.1; 
+      heartPos[i * 3 + 2] = y * 1.15;
+
+      heartColors[i * 3] = 1.0;
+      heartColors[i * 3 + 1] = 0.0;
+      heartColors[i * 3 + 2] = 0.4;
+    }
+
+    heartGeo.setAttribute('position', new THREE.BufferAttribute(heartPos, 3));
+    heartGeo.setAttribute('color', new THREE.BufferAttribute(heartColors, 3));
+
+    const heartMat = new THREE.PointsMaterial({
+      size: 0.045,
+      map: particleTexture,
+      vertexColors: true,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const heartPoints = new THREE.Points(heartGeo, heartMat);
+    mainGroup.add(heartPoints);
+
+    gsap.to(heartPoints.scale, {
+      x: 1.08, y: 1.08, z: 1.08,
+      duration: 0.8,
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut"
+    });
+
+    // Hàm cập nhật màu trái tim trung tâm
+    function updateHeartColor(hex) {
+      const color = new THREE.Color(hex);
+      const colors = heartGeo.attributes.color.array;
+      for (let i = 0; i < heartCount; i++) {
+        colors[i * 3] = color.r;
+        colors[i * 3 + 1] = color.g;
+        colors[i * 3 + 2] = color.b;
+      }
+      heartGeo.attributes.color.needsUpdate = true;
+    }
+
+    // 4. DẢI NGÂN HÀ 3D
+    const galaxyParams = { count: 30000, radius: 10, branches: 3, spin: 1.4 };
+    const galaxyGeo = new THREE.BufferGeometry();
+    const galaxyPos = new Float32Array(galaxyParams.count * 3);
+    const galaxyColors = new Float32Array(galaxyParams.count * 3);
+
+    for (let i = 0; i < galaxyParams.count; i++) {
+      const r = Math.pow(Math.random(), 2.2) * galaxyParams.radius;
+      const spinAngle = r * galaxyParams.spin;
+      const branchAngle = ((i % galaxyParams.branches) / galaxyParams.branches) * Math.PI * 2;
+
+      galaxyPos[i * 3] = Math.cos(branchAngle + spinAngle) * r + (Math.random() - 0.5) * 0.4;
+      galaxyPos[i * 3 + 1] = (Math.random() - 0.5) * 0.2;
+      galaxyPos[i * 3 + 2] = Math.sin(branchAngle + spinAngle) * r + (Math.random() - 0.5) * 0.4;
+
+      galaxyColors[i * 3] = 0.5;
+      galaxyColors[i * 3 + 1] = 0.1;
+      galaxyColors[i * 3 + 2] = 0.9;
+    }
+
+    galaxyGeo.setAttribute('position', new THREE.BufferAttribute(galaxyPos, 3));
+    galaxyGeo.setAttribute('color', new THREE.BufferAttribute(galaxyColors, 3));
+
+    const galaxyMat = new THREE.PointsMaterial({
+      size: 0.035,
+      map: particleTexture,
+      vertexColors: true,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const galaxyPoints = new THREE.Points(galaxyGeo, galaxyMat);
+    mainGroup.add(galaxyPoints);
+
+    // 5. KHUNG ẢNH SPRITE
+    const photoSprites = [];
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function createCircleTexture(imgUrl, callback) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      const img = new Image();
+      img.src = imgUrl;
+      img.onload = () => {
+        ctx.clearRect(0, 0, 512, 512);
+        ctx.beginPath();
+        ctx.arc(256, 256, 240, 0, Math.PI * 2);
+        ctx.fillStyle = "#ff0066";
+        ctx.fill();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(256, 256, 222, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(img, 0, 0, 512, 512);
+        ctx.restore();
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        callback(texture);
+      };
+    }
+
+    const photoPositions = [
+      { r: 2.3, angle: 0.8, y: 0.25 },
+      { r: 3.7, angle: 2.4, y: 0.35 },
+      { r: 4.9, angle: 4.2, y: 0.20 },
+      { r: 6.0, angle: 5.6, y: 0.40 }
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      createCircleTexture(wishesData[i].img, (texture) => {
+        const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(0.85, 0.85, 1);
+        
+        const posConfig = photoPositions[i];
+        sprite.position.x = Math.cos(posConfig.angle) * posConfig.r;
+        sprite.position.z = Math.sin(posConfig.angle) * posConfig.r;
+        sprite.position.y = posConfig.y;
+        sprite.userData = { index: i };
+
+        mainGroup.add(sprite);
+        photoSprites.push(sprite);
+
+        gsap.to(sprite.position, {
+          y: sprite.position.y + 0.15,
+          duration: 1.8 + i * 0.3,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+      });
+    }
+
+    window.addEventListener('pointerdown', (e) => {
+      if(e.target.closest('#control-panel')) return; // Tránh bấm nhầm bảng điều khiển
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(photoSprites);
+
+      if (intersects.length > 0) {
+        openWishModal(intersects[0].object.userData.index);
+      }
+    });
+
+    // 6. TRÁI TIM NỔI TỪ DƯỚI LÊN
+    function createHeartTexture(hexColor) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      
+      ctx.fillStyle = hexColor;
+      ctx.beginPath();
+      ctx.moveTo(32, 20);
+      ctx.bezierCurveTo(32, 14, 24, 6, 14, 6);
+      ctx.bezierCurveTo(2, 6, 2, 22, 2, 22);
+      ctx.bezierCurveTo(2, 36, 18, 48, 32, 58);
+      ctx.bezierCurveTo(46, 48, 62, 36, 62, 22);
+      ctx.bezierCurveTo(62, 22, 62, 6, 50, 6);
+      ctx.bezierCurveTo(40, 6, 32, 14, 32, 20);
+      ctx.fill();
+
+      return new THREE.CanvasTexture(canvas);
+    }
+
+    const floatingHeartsCount = 120;
+    const floatingGeo = new THREE.BufferGeometry();
+    const floatingPos = new Float32Array(floatingHeartsCount * 3);
+    const floatSpeed = [];
+
+    for (let i = 0; i < floatingHeartsCount; i++) {
+      floatingPos[i * 3] = (Math.random() - 0.5) * 16;
+      floatingPos[i * 3 + 1] = -5 + Math.random() * 10;
+      floatingPos[i * 3 + 2] = (Math.random() - 0.5) * 16;
+      floatSpeed.push(0.015 + Math.random() * 0.025);
+    }
+
+    floatingGeo.setAttribute('position', new THREE.BufferAttribute(floatingPos, 3));
+
+    const floatingMat = new THREE.PointsMaterial({
+      size: 0.2,
+      map: createHeartTexture("#ff0066"),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.85
+    });
+
+    const floatingPoints = new THREE.Points(floatingGeo, floatingMat);
+    scene.add(floatingPoints);
+
+    // Hàm cập nhật màu trái tim bay
+    function updateFloatingColor(hex) {
+      floatingMat.map = createHeartTexture(hex);
+      floatingMat.needsUpdate = true;
+    }
+
+    // Hàm chỉnh độ tương phản / sáng
+    function updateContrast(val) {
+      heartMat.size = 0.045 * val;
+      galaxyMat.size = 0.035 * val;
+      floatingMat.opacity = Math.min(1.0, 0.5 * val);
+    }
+
+    // 7. CHỮ 3D VÒNG QUANH
+    function createTextSprite(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.font = "Bold 26px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "#ff0066";
+      ctx.shadowBlur = 12;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(2.2, 0.45, 1);
+      return sprite;
+    }
+
+    ["HAPPY BIRTHDAY", "HAPPY BIRTHDAY", "HAPPY BIRTHDAY", "HAPPY BIRTHDAY"].forEach((txt, idx, arr) => {
+      const sprite = createTextSprite(txt);
+      const angle = (idx / arr.length) * Math.PI * 2 + (Math.PI / 4);
+      sprite.position.set(Math.cos(angle) * 4.8, (Math.random() - 0.5) * 0.3, Math.sin(angle) * 4.8);
+      mainGroup.add(sprite);
+    });
+
+    // 8. ANIMATION LOOP
+    function animate() {
+      requestAnimationFrame(animate);
+      mainGroup.rotation.y += 0.0025;
+
+      const positions = floatingGeo.attributes.position.array;
+      for (let i = 0; i < floatingHeartsCount; i++) {
+        positions[i * 3 + 1] += floatSpeed[i];
+        if (positions[i * 3 + 1] > 6) {
+          positions[i * 3 + 1] = -5;
+          positions[i * 3] = (Math.random() - 0.5) * 16;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 16;
+        }
+      }
+      floatingGeo.attributes.position.needsUpdate = true;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
